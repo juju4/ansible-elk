@@ -1,17 +1,16 @@
 ---
 - name: Logstash apt repo
   apt_repository:
-    repo="deb http://packages.elastic.co/logstash/{{ elk_logstash.version }}/{{ ansible_os_family|lower }} stable main"
+    repo="deb http://packages.elasticsearch.org/logstash/{{ elk_logstash.version }}/{{ ansible_os_family|lower }} stable main"
     update_cache=yes
   when: ansible_os_family == 'Debian'
-  sudo: yes
+  become: yes
 
 - name: Install logstash apt packages
   apt: pkg={{ item }} update_cache=yes state=present
   with_items:
    - logstash
-   - logstash-contrib
-  sudo: yes
+  become: yes
   when: ansible_os_family == 'Debian'
   notify: Restart logstash
 
@@ -20,8 +19,8 @@
     src={{ item.src }}
     dest=/etc/logstash/conf.d/{{ item.dest }}
     owner=root group=root mode=644
-  with_items: elk_logstash.configs
-  sudo: yes
+  with_items: "{{ elk_logstash.configs }}"
+  become: yes
   notify: Restart logstash
 
 - name: Logstash pattern files
@@ -29,8 +28,8 @@
     src={{ item.src }}
     dest=/opt/logstash/patterns/{{ item.dest }}
     owner=root group=root mode=644
-  with_items: elk_logstash.patterns
-  sudo: yes
+  with_items: "{{ elk_logstash.patterns }}"
+  become: yes
   when: elk_logstash.patterns is defined
   notify: Restart logstash
 
@@ -39,5 +38,6 @@
     src=logstash.monitrc.conf.j2
     dest=/etc/monit/conf.d/logstash.monitrc.conf
     owner=root group=root mode=644
-  sudo: yes
+  become: yes
   notify: Restart monit
+

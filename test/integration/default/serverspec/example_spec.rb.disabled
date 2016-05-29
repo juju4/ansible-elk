@@ -1,0 +1,41 @@
+## from http://koendc.github.io/2013/10/11/logstash-test-configuration.html
+
+#require "test_utils"
+libdir = '/opt/logstash/vendor/bundle/jruby/1.9/gems'
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+libdir = '/opt/logstash/vendor/bundle/jruby/1.9/gems/tzinfo-1.2.2/test'
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+
+describe "haproxy logs" do
+  extend LogStash::RSpec
+
+  config <<-CONFIG
+  filter {
+    grok {
+       type            => "haproxy"
+       add_tag         => [ "HTTP_REQUEST" ]
+       pattern         => "%{HAPROXYHTTP}"
+    }
+    date {
+       type            => 'haproxy'
+       match           => [ 'accept_date', 'dd/MMM/yyyy:HH:mm:ss.SSS' ]
+    }
+  }
+  CONFIG
+
+  sample({'@message' => '<150>Oct 8 08:46:47 syslog.host.net haproxy[13262]: 10.0.1.2:44799 [08/Oct/2013:08:46:44.256] frontend-name backend-name/server.host.net 0/0/0/1/2 404 1147 - - ---- 0/0/0/0/0 0/0 {client.host.net||||Apache-HttpClient/4.1.2 (java 1. 5)} {text/html;charset=utf-8|||} "GET /app/status HTTP/1.1"',
+          '@source_host' => '127.0.0.1',
+          '@type' => 'haproxy',
+          '@source' => 'tcp://127.0.0.1:60207/',
+
+      }) do
+
+    insist { subject["@fields"]["backend_name"] } == [ "backend-name" ]
+    insist { subject["@fields"]["http_request"] } == [ "/app/status" ]
+    insist { subject["tags"].include?("HTTP_REQUEST") }
+    insist { subject["@timestamp"] } == "2013-10-08T06:46:44.256Z"
+    reject { subject["@timestamp"] } == "2013-10-08T06:46:47Z"
+  end
+end
+
+

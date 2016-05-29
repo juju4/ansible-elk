@@ -1,27 +1,53 @@
 ---
 elk_java:
-  flavor: openjdk
+  flavor: oracle
+#  oracle:
+#    - oracle-java7-installer
+#    - oracle-java7-set-default
+#  openjdk:
+#    - openjdk-7-jre-headless
+## https://launchpad.net/~webupd8team/+archive/ubuntu/java
   oracle:
-    - oracle-java7-installer
-    - oracle-java7-set-default
+    - oracle-java8-installer
+    - oracle-java8-set-default
   openjdk:
     - openjdk-7-jre-headless
 
+elk_java_oracle:
+    - oracle-java8-installer
+    - oracle-java8-set-default
+elk_java_openjdk:
+    - openjdk-7-jre-headless
+
+
+elk_elasticsearch_enabled: true
+## restrict cluster traffic to dedicated network?
+## https://gist.github.com/fdv/1591412
+#elk_elasticsearch_restrict_if: 'eth1'
 elk_elasticsearch:
-  version: 1.4
+  version: 2.x
+  mode: alone      ## standalone mode
+  #mode: master
+  #mode: masterIP   ## if node in a cluster
+  hosts:
+  ## if node, both master and nodes need that
+  #cluster_name:
   pid_file: /var/run/elasticsearch.pid
   http:
     port: 9200
 
+elk_logstash_enabled: true
 elk_logstash:
-  version: 1.4
+#  version: 2.0
+  version: 2.3
   pid_file: /var/run/logstash.pid
   configs:
     - { src: logstash-simple.conf.j2, dest: simple.conf }
   patterns: [] # optional; follows same format as `configs`
 
+elk_kibana_enabled: true
 elk_kibana:
-  version: 4.0.2-linux-x64
+  version: 4.5.0-linux-x64
   path: /opt/kibana
   port: 5601
   user: kibana # optional; if unset, kibana does not require authentication
@@ -29,6 +55,12 @@ elk_kibana:
   allowed_addresses:
     - 127.0.0.1
 
+elk_packetbeat_enabled: false
+elk_packetbeat:
+  version: 1.2.1_amd64
+  url: https://download.elastic.co/beats/packetbeat/packetbeat_{{ elk_packetbeat.version }}.deb
+
 elk_nginx:
   port: 80
   user: nginx
+

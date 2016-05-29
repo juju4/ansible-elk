@@ -6,12 +6,62 @@
 # https://github.com/elasticsearch/elasticsearch/blob/master/config/elasticsearch.yml
 #
 
+bootstrap.mlockall: true
+
 ############################## Scripting ######################################
 
-script.groovy.sandbox.enabled: true
+#script.groovy.sandbox.enabled: true
+## v2.3.1: Guice Exception: java.lang.IllegalArgumentException: script.disable_dynamic is not a supported setting, replace with fine-grained script settings.
+#script.disable_dynamic: true
+#script.inline: off
+#script.indexed: off
 
 ############################## Network And HTTP ###############################
 
 {% if elk_elasticsearch.http.port is defined %}
 http.port: {{ elk_elasticsearch.http.port }}
 {% endif %}
+
+
+{% if elk_elasticsearch_restrict_if is defined %}
+## https://gist.github.com/fdv/1591412
+#network.publish_host: {{ elk_elasticsearch_restrict_if }}
+#network.transport_host: {{ elk_elasticsearch_restrict_if }}
+## https://github.com/elastic/elasticsearch/pull/8098
+network.host: _[{{ elk_elasticsearch_restrict_if }}]_
+#+transport.profiles.default.port: 9300-9400
+#transport.profiles.default.bind_host: 10.0.0.1
+#transport.profiles.client.port: 9500-9600
+#transport.profiles.client.bind_host: 192.168.0.1
+#transport.profiles.dmz.port: 9700-9800
+#transport.profiles.dmz.bind_host: 172.16.1.2
+{% endif %}
+
+{% if elk_elasticsearch.mode == 'alone' %}
+## standalone settings
+network.host: 127.0.0.1
+index.number_of_shards: 1
+index.number_of_replicas: 0
+node.max_local_storage_nodes: 1
+{% elif ansible_fqdn in groups['elk'] %}
+## master multi-nodes settings
+node.name: {{ ansible_fqdn }}
+node.master: true
+cluster.name: {{ elk_elasticsearch.clustername }}
+#discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: {{ elk_elasticsearch.hosts }}
+## if 3 nodes or more
+discovery.zen.minimum_master_nodes: 2
+{% elif ansible_fqdn in groups['elknode'] %}
+## non-master multi-nodes settings
+node.name: {{ ansible_fqdn }}
+node.master: false
+cluster.name: {{ elk_elasticsearch.clustername }}
+#discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.unicast.hosts: {{ elk_elasticsearch.hosts }}
+## if 3 nodes or more
+discovery.zen.minimum_master_nodes: 2
+## maybe? https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-node.html
+#http.enabled: false
+{% endif %}
+
