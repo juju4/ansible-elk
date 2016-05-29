@@ -37,6 +37,7 @@ script:
     || (echo 'Java is installed: fail' && exit 1)
 
   # Make sure Kibana is accessible
+  - curl -s http://localhost/app/kibana
   - >
     curl -s http://localhost/app/kibana
     | grep -q '<title>Kibana</title>'
