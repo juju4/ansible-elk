@@ -59,3 +59,8 @@ describe command('echo \'127.0.0.1 - - [11/Dec/2013:00:01:45 -0800] "GET /xampp/
   its(:stdout) { should contain('"message" => "127.0.0.1') }
 end
 
+describe command('curl -s http://localhost/app/kibana') do
+  its(:stdout) { should contain('<title>Kibana</title>') }
+  its(:exit_status) { should eq 0 }
+end
+

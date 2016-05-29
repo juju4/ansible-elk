@@ -38,7 +38,7 @@ script:
 
   # Make sure Kibana is accessible
   - >
-    curl -s http://localhost:80
-    | grep -q 'KIBANA_VERSION'
+    curl -s http://localhost/app/kibana
+    | grep -q '<title>Kibana</title>'
     && (echo 'Kibana is accessible: pass' && exit 0)
     || (echo 'Kibana is accessible: fail' && exit 1)
