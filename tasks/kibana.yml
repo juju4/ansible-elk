@@ -54,7 +54,7 @@
     owner={{ elk_nginx.user }} group=root mode=400
   become: yes
   when: http_pass_gen|changed
-    
+
 - name: Nginx config file
   template:
     src=kibana-default.j2
