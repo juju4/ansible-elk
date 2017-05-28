@@ -40,3 +40,14 @@
 - name: Install Kibana
   include: kibana.yml
   when: elk_kibana_enabled
+
+- meta: flush_handlers
+
+- name: Wait for kibana to be available before proceeding.
+  shell: "curl -D - --silent --max-time 5 http://localhost/app/kibana"
+  register: result
+  until: (result.stdout.find("403 Forbidden") != -1) or (result.stdout.find("200 OK") != -1) and (result.stdout.find("Please wait while") == -1)
+  retries: 15
+  delay: 5
+  changed_when: false
+

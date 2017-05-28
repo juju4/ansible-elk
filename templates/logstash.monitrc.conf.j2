@@ -3,8 +3,13 @@
 # ------------------------------------------
 
 check process logstash with pidfile {{ elk_logstash.pid_file }}
-  start program = "/etc/init.d/logstash restart" with timeout 60 seconds
+{% if ansible_service_mgr == 'systemd' %}
+  start program = "/bin/systemctl start logstash" with timeout 60 seconds
+  stop program  = "/bin/systemctl stop logstash"
+{% else %}
+  start program = "/etc/init.d/logstash start" with timeout 60 seconds
   stop program  = "/etc/init.d/logstash stop"
+{% endif %}
   if cpu > 90% for 15 cycles then alert
   if totalmem > 90% for 15 cycles then alert
   if loadavg(15min) greater than 10 for 50 cycles then alert

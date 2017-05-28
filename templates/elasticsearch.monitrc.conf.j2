@@ -3,8 +3,13 @@
 # ------------------------------------------
 
 check process elasticsearch with pidfile {{ elk_elasticsearch.pid_file }}
-  start program = "/etc/init.d/elasticsearch restart" with timeout 60 seconds
+{% if ansible_service_mgr == 'systemd' %}
+  start program = "/bin/systemctl start elasticsearch" with timeout 60 seconds
+  stop program  = "/bin/systemctl stop elasticsearch"
+{% else %}
+  start program = "/etc/init.d/elasticsearch start" with timeout 60 seconds
   stop program  = "/etc/init.d/elasticsearch stop"
+{% endif %}
   if cpu > 90% for 15 cycles then alert
   if totalmem > 90% for 15 cycles then alert
   if loadavg(15min) greater than 10 for 50 cycles then alert
